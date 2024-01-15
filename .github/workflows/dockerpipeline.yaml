@@ -1,0 +1,42 @@
+name: Buid and Deploy Resources to Docker Hub
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: The image tag
+        default: latest
+  push:
+    branches:
+      - main
+  
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push latest
+        if: ${{ !github.event.inputs.tag}}
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: oluchioraekwe/authservice:latest
+
+      - name: Build and push tag
+        if: ${{ github.event.inputs.tag}}
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: oluchioraekwe/authservice:${{ github.event.inputs.tag}}
